@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     bot_token: SecretStr
 
     # Make sure that .env has UTF-8 encoding
-    model_config = SettingsConfigDict(env_file='../.env', env_file_encoding='utf-8')
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 
 
 # Load
