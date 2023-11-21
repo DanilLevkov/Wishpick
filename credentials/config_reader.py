@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     db_max_workers: int
 
     # Make sure that .env has UTF-8 encoding
-    model_config = SettingsConfigDict(env_prefix='', env_file=get_env_path(), env_file_encoding='utf-8')
+    model_config = SettingsConfigDict(env_prefix='wishpick_', env_file=get_env_path(), env_file_encoding='utf-8')
 
 
 # Load
