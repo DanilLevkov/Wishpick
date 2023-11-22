@@ -51,13 +51,23 @@ price_cases = [
      "expected": {"from": 500,
                   "to": 500}
      },
-    {"input": "от -500 руб. до 1000 руб.",
-     "expected": {"from": 0,
+    {"input": "от -500 руб. до $1000 руб.",
+     "expected": {"from": 500,
                   "to": 1000}
      },
-    {"input": "от 1.5 руб. до 1000 руб.",
-     "expected": {"from": None,
-                  "to": 1000}
+    {"input": "от 1.5 руб. до 2,100 руб.",
+     "expected": {"from": 1000,
+                  "to": 2000}
+     },
+    {"input": "от 100руб. до 500р ",
+     "expected": {"from": 100,
+                  "to": 500}
+     },
+    {"input": "от",
+     "expected": None
+     },
+    {"input": "до",
+     "expected": None
      },
 ]
 

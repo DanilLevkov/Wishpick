@@ -9,11 +9,11 @@ def get_price_range(text: str):
         if tag not in text:
             return
         right_side = text.split(tag, 1)[1]
-        num_str = right_side.split()[0]
+        num_str = re.search(r'(\d+)', right_side)
+        if not num_str:
+            return
         try:
-            num = int(num_str)
-            if num < 0:
-                num = 0
+            num = int(num_str.group(0))
             if num < 20:
                 num *= 1000
             return num
