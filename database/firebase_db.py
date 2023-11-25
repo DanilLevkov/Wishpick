@@ -4,9 +4,9 @@ import concurrent.futures
 import firebase_admin
 from firebase_admin import credentials, db
 
-from credentials.config_reader import config
+from credentials.config_reader import config, get_cred_path
 
-cred = credentials.Certificate("../credentials/firebase_auth.json")
+cred = credentials.Certificate(get_cred_path("firebase_auth.json"))
 
 firebase_admin.initialize_app(cred, {
     'databaseURL': config.firebase_realtime_db.get_secret_value(),
@@ -17,6 +17,10 @@ db_executor = concurrent.futures.ThreadPoolExecutor(max_workers=config.db_max_wo
 
 
 async def db_get(ref: db.Reference):
+    return await asyncio.get_running_loop().run_in_executor(db_executor, ref.get)
+
+
+async def q_get(ref: db.Query):
     return await asyncio.get_running_loop().run_in_executor(db_executor, ref.get)
 
 
