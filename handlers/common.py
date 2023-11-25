@@ -1,6 +1,7 @@
 from aiogram import Router, F
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from aiogram import types
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 
@@ -16,14 +17,14 @@ router = Router()
 
 
 @router.message(StateFilter(None), Command("start"))
-async def cmd_start(message: Message):
+async def cmd_start(message: types.Message):
     await message.answer(
         text=get_text("greeting"),
     )
 
 
 @router.message(StateFilter(None), Command("help"))
-async def cmd_help(message: Message):
+async def cmd_help(message: types.Message):
     await message.answer(
         text=get_text("more_info"),
     )
@@ -33,9 +34,19 @@ class TopCommandState(StatesGroup):
     one_more = State()
 
 
-async def one_more_gift(message: Message, state: FSMContext):
+async def remove_prev_msg_inline_keyboard(bot, data: dict):
+    if "prev_msg" not in data.keys():
+        return
+    prev_msg = data["prev_msg"]
+    await bot.edit_message_reply_markup(**prev_msg)
+
+
+async def one_more_gift(message: types.Message, state: FSMContext):
     batch_size = 10
     data = await state.get_data()
+
+    await remove_prev_msg_inline_keyboard(message.bot, data)
+
     cache: OrderedDict = data.get("cached_response", None)
     first_call = False
     if not cache:
@@ -47,54 +58,53 @@ async def one_more_gift(message: Message, state: FSMContext):
             first_call = True
         limited_ref = ref.limit_to_last(batch_size)
         cache = await fb.q_get(limited_ref)
-        if not first_call:
+        data["cached_response"] = cache
+        if cache and not first_call:
             cache.popitem(last=True)
         if not cache:
             text = "Это все варианты, что я нашел"
             if first_call:
                 text = "Не смог найти подходящих вариантов 😭"
             await state.clear()
-            await message.answer(
-                text=text,
-                reply_markup=ReplyKeyboardRemove()
-            )
+            print("Cleared")
+            await message.answer(text=text)
             return
         data["last_score"] = next(iter(cache.values()))["score"]
 
     to_send = cache.popitem(last=True)[1]
     content = serrializer.gift_to_str(to_send)
 
-    keyboard = None
-    if first_call:
-        kb = [[
-            KeyboardButton(text="Ещё"),
-            KeyboardButton(text="Стоп")
-        ]]
-        keyboard = ReplyKeyboardMarkup(
-            keyboard=kb,
-            resize_keyboard=True,
-            input_field_placeholder="Можете посмотреть ещё варианты"
-        )
-    await message.answer(**content.as_kwargs(), reply_markup=keyboard)
+    builder = InlineKeyboardBuilder()
+    builder.add(
+        types.InlineKeyboardButton(text="ещё", callback_data="top_more"),
+        types.InlineKeyboardButton(text="стоп", callback_data="top_finish")
+    )
 
+    msg: types.Message = await message.answer(**content.as_kwargs(),
+                                              reply_markup=builder.as_markup(),
+                                              disable_notification=True)
+
+    data["prev_msg"] = {"chat_id": msg.chat.id, "message_id": msg.message_id}
+    print("data")
+    print(data)
     await state.set_data(data)
-    await state.set_state(TopCommandState.one_more)
 
 
 @router.message(StateFilter(None), Command("top"))
-async def cmd_top(message: Message, state: FSMContext):
+async def cmd_top(message: types.Message, state: FSMContext):
+    await state.set_state(TopCommandState.one_more)
     await one_more_gift(message, state)
 
 
-@router.message(TopCommandState.one_more, F.text.lower() == "ещё")
-async def top_more(message: Message, state: FSMContext):
-    await one_more_gift(message, state)
+@router.callback_query(TopCommandState.one_more, F.data == "top_more")
+async def top_more(callback: types.CallbackQuery, state: FSMContext):
+    await one_more_gift(callback.message, state)
+    await callback.answer()
 
 
-@router.message(TopCommandState.one_more, F.text.lower() == "стоп")
-async def top_finish(message: Message, state: FSMContext):
+@router.callback_query(TopCommandState.one_more, F.data == "top_finish")
+async def top_finish(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    await remove_prev_msg_inline_keyboard(callback.bot, data)
     await state.clear()
-    await message.answer(
-        text="Спасибо",
-        reply_markup=ReplyKeyboardRemove()
-    )
+    await callback.answer(text="Спасибо!")
