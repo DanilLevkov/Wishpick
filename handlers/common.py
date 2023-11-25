@@ -40,13 +40,15 @@ async def one_more_gift(message: Message, state: FSMContext):
     first_call = False
     if not cache:
         ref = fb.db.reference("/gift_list/").order_by_child("score")
-        last = data.get("last_scope", None)
-        if last:
-            ref = ref.end_at(last)
+        prev_batch_start_score = data.get("last_score", None)
+        if prev_batch_start_score:
+            ref = ref.end_at(prev_batch_start_score)
         else:
             first_call = True
         limited_ref = ref.limit_to_last(batch_size)
         cache = await fb.q_get(limited_ref)
+        if not first_call:
+            cache.popitem(last=True)
         if not cache:
             text = "Это все варианты, что я нашел"
             if first_call:
@@ -57,14 +59,12 @@ async def one_more_gift(message: Message, state: FSMContext):
                 reply_markup=ReplyKeyboardRemove()
             )
             return
-        first_key = next(iter(cache))
-        await state.update_data(last_scope=first_key)
+        data["last_score"] = next(iter(cache.values()))["score"]
 
     to_send = cache.popitem(last=True)[1]
     content = serrializer.gift_to_str(to_send)
 
     keyboard = None
-    print(f"First call is {first_call}")
     if first_call:
         kb = [[
             KeyboardButton(text="Ещё"),
@@ -77,7 +77,7 @@ async def one_more_gift(message: Message, state: FSMContext):
         )
     await message.answer(**content.as_kwargs(), reply_markup=keyboard)
 
-    await state.update_data(cached_response=cache)
+    await state.set_data(data)
     await state.set_state(TopCommandState.one_more)
 
 
