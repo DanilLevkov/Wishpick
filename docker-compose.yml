@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  web-parser:
+    build: ./web_parser
+    volumes:
+      - ./credentials/:/app/credentials:ro
+    networks:
+      - app-network
+
+  bot:
+    build: ./bot
+    volumes:
+      - ./credentials/:/app/credentials:ro
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  credentials:

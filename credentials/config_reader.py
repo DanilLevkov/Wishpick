@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     firebase_realtime_db: SecretStr
     firebase_storage: SecretStr
     db_max_workers: int
+    web_parser_host: str
+    web_parser_port: int
 
     # Make sure that .env has UTF-8 encoding
     model_config = SettingsConfigDict(env_prefix='wishpick_', env_file=get_cred_path(".env"), env_file_encoding='utf-8')
