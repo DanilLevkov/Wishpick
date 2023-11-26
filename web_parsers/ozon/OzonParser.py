@@ -7,22 +7,42 @@ ozon_prefix = "https://www.ozon.ru"
 
 
 def parse_json(parsed_info):
-    states = parsed_info["widgetStates"]
-    gift = {}
-    for widget_name, widget_value in states.items():
-        if "webProductHeading" in widget_name:
-            value = json.loads(widget_value)
-            gift["name"] = value.get("title", None)
-        if "webSale" in widget_name:
-            value = json.loads(widget_value)
-            price = value.get("price", None)
-            if price:
-                price = int(price) / 100
-                gift["price"] = price
+    inner_html = dict()
+    try:
+        for val in parsed_info["seo"]["script"]:
+            if "innerHTML" in val.keys():
+                inner_html = json.loads(val["innerHTML"])
+    except (json.decoder.JSONDecodeError, KeyError, AttributeError):
+        print("innerHTML loading error")
+
+    gift = dict()
+    if not inner_html:
+        states = parsed_info["widgetStates"]
+        for widget_name, widget_value in states.items():
+            if "webProductHeading" in widget_name:
+                value = json.loads(widget_value)
+                gift["name"] = value.get("title", None)
+        return gift
+
+    gift["name"] = inner_html.get("name", None)
+    gift["img_url"] = inner_html.get("image", None)
+    gift["brand"] = inner_html.get("brand", None)
+    offer = inner_html.get("offers", None)
+    if offer:
+        gift["price"] = offer.get("price", None)
+
+    category = parsed_info.get("layoutTrackingInfo", None)
+    if category:
+        category = json.loads(category)
+        cat_list = category["hierarchy"].split("/")
+        cat_result = [cat.lower() for cat in cat_list
+                      if cat != gift["brand"]
+                      if not any(ch in cat for ch in [' ', ','])]
+        gift["category"] = cat_result
     return gift
 
 
-def parse_ozon_item_url(url: str):
+def parse_ozon(url: str):
     if not url.startswith(ozon_prefix + "/product"):
         return
     product_url = url.removeprefix(ozon_prefix)
