@@ -1,6 +1,6 @@
 import unittest
 
-from OzonParser import parse_ozon_item_url, parse_json
+from OzonParser import parse_ozon_item_url
 
 
 def parse_test(obj, test_case):
