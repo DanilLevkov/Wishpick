@@ -15,9 +15,8 @@ class URLParser:
         self._session = aiohttp.ClientSession(loop=asyncio.get_running_loop())
 
     async def check_connection(self):
-
         async with self._session.get(self._api_url) as resp:
-            return resp.text()
+            return await resp.text()
 
     async def wait_response(self, url: str):
         request = self._callback_url + urllib.parse.urlencode({"url": url})

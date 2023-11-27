@@ -4,11 +4,13 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram import types
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.enums import MessageEntityType
+
+from utils.web_parser_connector import url_parser
 
 from collections import OrderedDict
 
 from text.text import get_text
-from utils import parsers
 from utils import serrializer
 
 from database import firebase_db as fb
@@ -27,6 +29,26 @@ async def cmd_start(message: types.Message):
 async def cmd_help(message: types.Message):
     await message.answer(
         text=get_text("more_info"),
+    )
+
+
+@router.message(StateFilter(None), F.entities[:].type == MessageEntityType.URL)
+async def url_parse(message: types.Message):
+    if len(message.entities) > 1:
+        await message.answer(text="Умею обрабатывать только по одной ссылке за раз")
+    url = message.entities[0].url
+
+    resp_gift = await url_parser.wait_response()
+    content = serrializer.gift_to_str(resp_gift)
+
+    await message.answer(**content.as_kwargs())
+
+
+@router.message(StateFilter(None), Command("check_parser"))
+async def check_parser(message: types.Message):
+    resp = await url_parser.check_connection()
+    await message.answer(
+        text=resp
     )
 
 

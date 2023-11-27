@@ -7,6 +7,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from credentials.config_reader import config
 
 from handlers import common
+from utils.web_parser_connector import url_parser
 
 
 async def main():
@@ -14,6 +15,8 @@ async def main():
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     )
+
+    url_parser.start_session()
 
     dp = Dispatcher(storage=MemoryStorage())
     bot = Bot(config.bot_token.get_secret_value())
