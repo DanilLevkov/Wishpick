@@ -70,8 +70,8 @@ def parse_ozon(driver, url: str):
         if body.pre:
             body = body.pre
         json_response = json.loads(body.text)
-        result = parse_json(json_response)
-        return result
-    except (json.decoder.JSONDecodeError, AttributeError):
-        logging.info("HTML parser except")
+    except (json.decoder.JSONDecodeError, AttributeError) as e:
+        logging.info(f"HTML parser except: {e}")
         return
+    result = parse_json(json_response)
+    return result

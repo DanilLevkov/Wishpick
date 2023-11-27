@@ -17,6 +17,7 @@ def gift_to_str(gift: dict) -> Text:
     if "brand" in keys:
         result.append(as_key_value("Бренд", gift["brand"]))
     if "category" in keys:
-        tags = as_line([HashTag("#" + x) for x in gift["category"]], end='', sep=' ')
-        result.append(tags)
+        tags = [HashTag("#" + x) for x in gift["category"]]
+        tag_line = as_line(*tags, end='', sep=' ')
+        result.append(tag_line)
     return as_list(*result)
