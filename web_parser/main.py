@@ -13,7 +13,7 @@ from ozon.OzonParser import get_ozon_prefix, parse_ozon
 
 app = Flask(__name__)
 
-browser = None
+browser: selenium.webdriver.remote.webdriver.WebDriver = None
 
 
 def try_init_browser():
@@ -27,25 +27,19 @@ def try_init_browser():
     return True
 
 
-def get_browser() -> selenium.webdriver.remote.webdriver.WebDriver:
+@app.route('/init')
+def init_connection():
     global browser
     if not browser:
         while not try_init_browser():
             time.sleep(1)
         print("Browser is connected ...", file=sys.stderr)
-    return browser
-
-
-@app.route('/init')
-def init_connection():
-    print('Hiiiii', file=sys.stderr)
-    get_browser().get("https://www.google.com/")
-    return get_browser().current_url
+    return "Inited"
 
 
 def parse(url: str):
     if url.startswith(get_ozon_prefix()):
-        return parse_ozon(get_browser(), url)
+        return parse_ozon(browser, url)
 
 
 @app.route('/callback')

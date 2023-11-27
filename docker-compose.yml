@@ -1,7 +1,14 @@
 version: "3.8"
 
 services:
+  selenium:
+    image: selenium/standalone-firefox
+    networks:
+      - app-network
+
   web-parser:
+    depends_on:
+      - selenium
     build: ./web_parser
     volumes:
       - ./credentials/:/app/credentials:ro

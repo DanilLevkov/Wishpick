@@ -44,14 +44,6 @@ async def url_parse(message: types.Message):
     await message.answer(**content.as_kwargs())
 
 
-@router.message(StateFilter(None), Command("check_parser"))
-async def check_parser(message: types.Message):
-    resp = await url_parser.check_connection()
-    await message.answer(
-        text=resp
-    )
-
-
 class TopCommandState(StatesGroup):
     one_more = State()
 

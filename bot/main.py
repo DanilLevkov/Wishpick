@@ -17,6 +17,8 @@ async def main():
     )
 
     url_parser.start_session()
+    init_status = await url_parser.init_connection()
+    logging.info(f"URL parser status is {init_status}")
 
     dp = Dispatcher(storage=MemoryStorage())
     bot = Bot(config.bot_token.get_secret_value())

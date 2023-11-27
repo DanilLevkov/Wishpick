@@ -9,13 +9,14 @@ class URLParser:
     def __init__(self, host: str, port: str):
         self._session = None
         self._api_url = "http://" + host + ":" + port
+        self._init_url = self._api_url + "/init"
         self._callback_url = self._api_url + "/callback?"
 
     def start_session(self):
-        self._session = aiohttp.ClientSession(loop=asyncio.get_running_loop())
+        self._session = aiohttp.ClientSession(loop=asyncio.get_event_loop())
 
-    async def check_connection(self):
-        async with self._session.get(self._api_url) as resp:
+    async def init_connection(self):
+        async with self._session.get(self._init_url) as resp:
             return await resp.text()
 
     async def wait_response(self, url: str):
