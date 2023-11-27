@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import Router, F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.state import StatesGroup, State

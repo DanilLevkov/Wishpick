@@ -1,11 +1,15 @@
 import json
 from bs4 import BeautifulSoup
+import logging
 
 api_url = "http://www.ozon.ru/page/json/v2?url="
 ozon_prefix = "https://www.ozon.ru"
 
-def get_ozon_prefix():
-    return ozon_prefix
+
+def is_ozon_link(url: str):
+    prefixes = ["https://www.ozon.ru", "https://ozon.ru"]
+    return any(url.startswith(pref) for pref in prefixes)
+
 
 def parse_json(parsed_info):
     inner_html = dict()
@@ -14,7 +18,7 @@ def parse_json(parsed_info):
             if "innerHTML" in val.keys():
                 inner_html = json.loads(val["innerHTML"])
     except (json.decoder.JSONDecodeError, KeyError, AttributeError):
-        print("innerHTML loading error")
+        logging.info("innerHTML loading error")
 
     gift = dict()
     if not inner_html:
@@ -23,6 +27,7 @@ def parse_json(parsed_info):
             if "webProductHeading" in widget_name:
                 value = json.loads(widget_value)
                 gift["name"] = value.get("title", None)
+        logging.info("use widgetStates")
         return gift
 
     gift["name"] = inner_html.get("name", None)
@@ -45,9 +50,11 @@ def parse_json(parsed_info):
 
 def parse_ozon(driver, url: str):
     if not url.startswith(ozon_prefix + "/product"):
+        logging.info(f"Short link is received {url}")
         driver.get(url)
         url = driver.current_url
     if not url.startswith(ozon_prefix + "/product"):
+        logging.info(f"Full link is not supported {url}")
         return
     product_url = url.removeprefix(ozon_prefix)
     product_url = product_url.split('/?', 1)[0]
@@ -55,14 +62,16 @@ def parse_ozon(driver, url: str):
     driver.get(api_product_url)
     response: str = driver.page_source
     if not response:
+        logging.info("driver.page_source empty")
         return
     try:
         parsed_html = BeautifulSoup(response, 'html.parser')
-        pre = parsed_html.body.pre
-        if not pre:
-            return
-        json_response = json.loads(pre.text)
+        body = parsed_html.body
+        if body.pre:
+            body = body.pre
+        json_response = json.loads(body.text)
         result = parse_json(json_response)
         return result
     except (json.decoder.JSONDecodeError, AttributeError):
+        logging.info("HTML parser except")
         return
