@@ -3,6 +3,8 @@ version: "3.8"
 services:
   selenium:
     image: selenium/standalone-firefox
+    environment:
+      - SE_NODE_SESSION_TIMEOUT=86400
     networks:
       - app-network
 
