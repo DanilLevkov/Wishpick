@@ -14,7 +14,9 @@ def gift_to_str(gift: dict) -> Text:
         result.append(as_key_value("Оценка", gift["score"]))
     if "url" in keys:
         result.append(TextLink("Ссылка", url=gift["url"]))
+    if "brand" in keys:
+        result.append(TextLink("Бренд", url=gift["brand"]))
     if "category" in keys:
-        tags = as_line([HashTag("#" + x) for x in gift["category"].keys()], end='', sep=' ')
+        tags = as_line([HashTag("#" + x) for x in gift["category"]], end='', sep=' ')
         result.append(tags)
     return as_list(*result)

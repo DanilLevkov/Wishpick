@@ -10,11 +10,18 @@ app = Flask(__name__)
 def ping_service():
     return 'Hello, I am ping service!'
 
+def parse(url: str):
+    if url.startswith(get_ozon_prefix()):
+        return parse_ozon(driver, url)
 
-@app.route('/ping')
-def do_ping():
-    time.sleep(3)
-    return "Ping pong"
+
+@app.route('/callback')
+def parse_and_return():
+    url = request.args.get('url', default=None, type=str)
+    if not url:
+        return
+    url = urllib.parse.unquote(url)
+    return parse(url)
 
 
 if __name__ == "__main__":

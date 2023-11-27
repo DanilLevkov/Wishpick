@@ -1,10 +1,11 @@
 import json
-from web_parsers.driver import driver
 from bs4 import BeautifulSoup
 
 api_url = "http://www.ozon.ru/page/json/v2?url="
 ozon_prefix = "https://www.ozon.ru"
 
+def get_ozon_prefix():
+    return ozon_prefix
 
 def parse_json(parsed_info):
     inner_html = dict()
@@ -42,7 +43,10 @@ def parse_json(parsed_info):
     return gift
 
 
-def parse_ozon(url: str):
+def parse_ozon(driver, url: str):
+    if not url.startswith(ozon_prefix + "/product"):
+        driver.get(url)
+        url = driver.current_url
     if not url.startswith(ozon_prefix + "/product"):
         return
     product_url = url.removeprefix(ozon_prefix)
