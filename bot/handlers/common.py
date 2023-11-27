@@ -36,11 +36,20 @@ async def cmd_help(message: types.Message):
 async def url_parse(message: types.Message):
     if len(message.entities) > 1:
         await message.answer(text="Умею обрабатывать только по одной ссылке за раз")
-    url = message.entities[0].url
+    entity = message.entities[0]
+    url = entity.url
+    if not url:
+        url = entity.extract_from(message.text)
 
-    resp_gift = await url_parser.wait_response()
+    resp_gift = await url_parser.wait_response(url=url)
+    if resp_gift == "empty":
+        return await message.answer(text="URL не распознан")
+    if resp_gift == "failed":
+        return await message.answer(text="Система распознавания недоступна")
+    if resp_gift == "stub":
+        return
+
     content = serrializer.gift_to_str(resp_gift)
-
     await message.answer(**content.as_kwargs())
 
 
