@@ -10,6 +10,10 @@ services:
     depends_on:
       - selenium
     build: ./web_parser
+    env_file:
+      - ./credentials/.env
+    environment:
+      - WISHPICK_INSIDE_DOCKER=true
     volumes:
       - ./credentials/:/app/credentials:ro
     networks:
@@ -17,6 +21,10 @@ services:
 
   bot:
     build: ./bot
+    env_file:
+      - ./credentials/.env
+    environment:
+      - WISHPICK_INSIDE_DOCKER=true
     volumes:
       - ./credentials/:/app/credentials:ro
     networks:
